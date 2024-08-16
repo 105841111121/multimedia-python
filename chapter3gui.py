@@ -1,39 +1,36 @@
 import tkinter as tk
-from PIL import Image, ImageTk
 from tkinter import filedialog
 from pydub import AudioSegment
 from pydub.playback import play
-import threading
+import tempfile
+import os
 
-def open_image():
-    file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg;*.jpeg;*.png")])
-    if file_path:
-        image = Image.open(file_path)
-        photo = ImageTk.PhotoImage(image)
-        label.config(image=photo)
-        label.image = photo  # Keep a reference to avoid garbage collection
-
+# Definisikan fungsi untuk memutar musik
 def play_music():
-    file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.mp3;*.wav;*.flac")])
+    # Membuat jendela Tkinter yang tidak terlihat
+    root = tk.Tk()
+    root.withdraw()  # Menyembunyikan jendela utama Tkinter
+
+    file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.mp3 *.wav")])
+
     if file_path:
-        audio = AudioSegment.from_file(file_path)
-        threading.Thread(target=play, args=(audio,)).start()
+        try:
+            # Load file audio
+            audio = AudioSegment.from_file(file_path)
 
-root = tk.Tk()
-root.title("Multimedia Application")
+            # Ubah lokasi penyimpanan file sementara ke direktori yang Anda tentukan
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False, dir="C:/Users/ASUS/") as temp_audio_file:
+                temp_file_path = temp_audio_file.name
+                audio.export(temp_file_path, format="wav")
 
-# Initial image setup
-image = Image.open('sasuke.jpg')
-photo = ImageTk.PhotoImage(image)
+            # Memutar audio menggunakan Pydub
+            play(audio)
 
-label = tk.Label(root, image=photo)
-label.pack()
+            # Menghapus file sementara setelah selesai
+            os.remove(temp_file_path)
 
-# Buttons
-open_button = tk.Button(root, text="Open Image", command=open_image)
-open_button.pack()
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
 
-play_button = tk.Button(root, text="Play Music", command=play_music)
-play_button.pack()
-
-root.mainloop()
+# Panggil fungsi untuk memutar musik
+play_music()
